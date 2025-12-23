@@ -95,7 +95,7 @@ class PODWorkflowBuilder:
         self._add_edges(include_optimization, human_review_before_upload)
         
         # 编译工作流
-        self._compile(checkpointer)
+        self._compile(checkpointer, human_review=human_review_before_upload)
         
         logger.info("Workflow built successfully")
         return self
@@ -215,7 +215,7 @@ class PODWorkflowBuilder:
         
         logger.info("Added edges to workflow")
 
-    def _compile(self, checkpointer: Optional[Any] = None):
+    def _compile(self, checkpointer: Optional[Any] = None, human_review: bool = False):
         """编译工作流"""
         if checkpointer is None:
             # 1. 尝试从配置中获取数据库 URL
@@ -241,12 +241,12 @@ class PODWorkflowBuilder:
                 checkpointer = MemorySaver()
                 logger.info("No database_url found. Using MemorySaver (non-persistent).")
 
-        # 编译 Graph
-        self.app = self.workflow.compile(
-            checkpointer=checkpointer,
-            # 这里是我们下一步要用的关键参数
-            interrupt_before=["human_review_node"]  # 假设你的审核节点叫这个
-        )
+        # 编译 Graph - 只有在启用人工审核时才设置 interrupt_before
+        compile_kwargs = {"checkpointer": checkpointer}
+        if human_review:
+            compile_kwargs["interrupt_before"] = ["human_review"]
+        
+        self.app = self.workflow.compile(**compile_kwargs)
         
         logger.info("Workflow compiled with checkpointer")
     

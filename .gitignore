@@ -1,11 +1,29 @@
-# IDE
+# ===========================
+# IDE & Editor
+# ===========================
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
+# ===========================
+# OS Generated
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===========================
 # Python
+# ===========================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -26,12 +44,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
 ENV/
 env/
-.venv
+.venv/
 
 # Environment variables
 .env
@@ -47,19 +66,20 @@ env/
 *.log
 logs/
 
-# OS
-.DS_Store
-Thumbs.db
-
 # Test coverage
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytest_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -67,7 +87,49 @@ coverage.xml
 # pyenv
 .python-version
 
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ===========================
+# Node.js / Frontend
+# ===========================
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js
+.next/
+out/
+
+# Production build
+build/
+dist/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ===========================
 # Temporary files
+# ===========================
 *.tmp
+*.temp
 *.bak
 *.backup
+*.orig

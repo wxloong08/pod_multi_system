@@ -1,39 +1,45 @@
-# POD Multi-Agent System
+# 🎨 POD 多智能体系统
 
-基于LangGraph的POD（Print-on-Demand）多智能体自动化系统，实现从创意到上架的全流程自动化。
+基于 LangGraph 的 AI 驱动 POD（Print-on-Demand）按需打印电商自动化系统。
 
-## 🎯 项目概述
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.0+-green.svg)](https://langchain-ai.github.io/langgraph/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-这是一个AI驱动的电商自动化系统，包含8个专业化Agent协作完成：
+## 📖 项目概述
+
+这是一个 AI 驱动的电商自动化系统，协调 8 个专业化 Agent 完成从创意构思到产品上架的完整工作流：
 
 1. **趋势分析** → 分析市场热点和关键词
-2. **设计生成** → AI生成产品设计图
-3. **质量检查** → 验证设计质量（带循环重试）
-4. **产品合成** → 创建产品Mockup
-5. **SEO优化** → 生成优化的标题、描述、标签
-6. **平台上传** → 发布到Etsy/Amazon
-7. **优化建议** → 分析销售数据提供建议
+2. **设计生成** → AI 生成产品设计图
+3. **质量检查** → 验证设计质量（带循环重试机制）
+4. **产品合成** → 创建产品 Mockup 效果图
+5. **SEO 优化** → 生成优化的标题、描述、标签
+6. **平台上传** → 发布到 Etsy/Amazon 等平台
+7. **优化建议** → 分析销售数据并提供改进建议
 
 ## 🏗️ 系统架构
 
 ```mermaid
 graph TD
-    START((Start)) --> trend_analysis[趋势分析Agent]
-    trend_analysis --> design_generation[设计生成Agent]
-    design_generation --> quality_check{质量检查Agent}
+    START((开始)) --> trend_analysis[趋势分析 Agent]
+    trend_analysis --> design_generation[设计生成 Agent]
+    design_generation --> quality_check{质量检查 Agent}
     
-    quality_check -->|Pass: score >= 0.8| mockup_creation[产品合成Agent]
-    quality_check -->|Retry: score < 0.8 & retries < 3| design_generation
-    quality_check -->|Fail: retries >= 3| END1((End))
+    quality_check -->|通过: 分数 >= 0.8| mockup_creation[产品合成 Agent]
+    quality_check -->|重试: 分数 < 0.8 且 重试次数 < 3| design_generation
+    quality_check -->|失败: 重试次数 >= 3| END1((结束))
     
-    mockup_creation --> seo_optimization[SEO优化Agent]
-    seo_optimization --> platform_upload[平台上传Agent]
-    platform_upload --> optimization[优化建议Agent]
-    optimization --> END2((End))
+    mockup_creation --> seo_optimization[SEO优化 Agent]
+    seo_optimization --> platform_upload[平台上传 Agent]
+    platform_upload --> optimization[优化建议 Agent]
+    optimization --> END2((结束))
 ```
 
 ## 🔧 技术栈
 
+### 后端
 | 组件 | 技术 |
 |------|------|
 | 工作流编排 | LangGraph StateGraph |
@@ -41,16 +47,59 @@ graph TD
 | 设计生成 | DALL-E 3 |
 | 质量检查 | 规则引擎 + LLM |
 | 产品合成 | Printful API |
-| SEO优化 | Claude 3.5 Sonnet |
+| SEO 优化 | Claude 3.5 Sonnet |
 | 平台上传 | Etsy/Amazon API |
 | 状态持久化 | PostgreSQL/MemorySaver |
 
-## 📦 安装
+### 前端
+| 组件 | 技术 |
+|------|------|
+| 框架 | Next.js 14 (App Router) |
+| 语言 | TypeScript |
+| 样式 | Tailwind CSS + shadcn/ui |
+| 状态管理 | Zustand |
+| 数据获取 | TanStack Query + Axios |
+| 图标库 | Lucide React |
+
+## 📁 项目结构
+
+```
+pod_multi_agent_system/
+├── backend/                 # Python FastAPI 后端
+│   ├── main.py             # FastAPI 入口文件
+│   ├── requirements.txt    # Python 依赖
+│   ├── agents/             # Agent 实现
+│   ├── api/                # API 路由
+│   ├── core/               # 核心模块（状态、工作流）
+│   ├── config/             # 配置文件
+│   └── utils/              # 工具函数
+│
+├── frontend/               # Next.js 前端
+│   ├── src/
+│   │   ├── app/           # App Router 页面
+│   │   ├── components/    # React 组件
+│   │   ├── hooks/         # 自定义 Hooks
+│   │   ├── lib/           # 工具库 & API 客户端
+│   │   └── stores/        # Zustand 状态管理
+│   ├── package.json
+│   └── tailwind.config.ts
+│
+├── README.md               # 本文件
+└── LICENSE                 # MIT 许可证
+```
+
+## 🚀 快速开始
+
+### 前置要求
+
+- Python 3.11+
+- Node.js 18+
+- npm 或 pnpm
+
+### 后端配置
 
 ```bash
-# 克隆项目
-git clone <repository_url>
-cd pod_multi_agent_system
+cd backend
 
 # 创建虚拟环境
 python -m venv venv
@@ -59,11 +108,32 @@ source venv/bin/activate  # Linux/Mac
 
 # 安装依赖
 pip install -r requirements.txt
+
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入你的 API Keys
+
+# 启动服务器
+uvicorn main:app --reload --port 8000
 ```
 
-## ⚙️ 配置
+### 前端配置
 
-创建 `.env` 文件：
+```bash
+cd frontend
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+打开 [http://localhost:3000](http://localhost:3000) 查看控制台。
+
+## ⚙️ 环境配置
+
+在 `backend/` 目录下创建 `.env` 文件：
 
 ```env
 # LLM API Keys
@@ -77,215 +147,41 @@ PRINTFUL_API_KEY=your_printful_api_key
 ETSY_API_KEY=your_etsy_api_key
 ETSY_SHOP_ID=your_shop_id
 
-# Database (可选，用于Checkpoint持久化)
+# 数据库（可选，用于 Checkpoint 持久化）
 DATABASE_URL=postgresql://user:password@localhost:5432/pod_db
-REDIS_URL=redis://localhost:6379
 
-# Workflow Config
+# 工作流配置
 MAX_RETRIES=3
 QUALITY_THRESHOLD=0.8
-HUMAN_REVIEW=false
-INCLUDE_OPTIMIZATION=true
-```
-
-## 🚀 使用方法
-
-### 命令行
-
-```bash
-# 运行演示
-python main.py --demo
-
-# 运行工作流
-python main.py --niche "cat lovers" --style "minimalist" --designs 5
-
-# 完整参数
-python main.py \
-    --niche "cat lovers" \
-    --style "minimalist" \
-    --designs 5 \
-    --platforms etsy amazon \
-    --products t-shirt mug poster \
-    --human-review \
-    --output results.json
-```
-
-### 作为模块
-
-```python
-from main import run_pod_workflow
-
-result = run_pod_workflow(
-    niche="cat lovers",
-    style="minimalist",
-    num_designs=5,
-    target_platforms=["etsy"],
-    product_types=["t-shirt", "mug"]
-)
-
-print(f"Created {len(result['designs'])} designs")
-print(f"Published {len(result['listings'])} listings")
-print(f"Total cost: ${result['total_cost']:.2f}")
-```
-
-### 高级用法：断点续传
-
-```python
-from core import create_pod_workflow
-
-# 创建工作流
-runner = create_pod_workflow(
-    config=config_dict,
-    human_review=True
-)
-
-# 运行（会在human_review节点暂停）
-result = runner.run(niche="cat lovers", style="minimalist")
-
-# 获取thread_id
-thread_id = result["thread_id"]
-
-# ... 人工审核 ...
-
-# 恢复执行
-final_result = runner.resume(
-    thread_id=thread_id,
-    updates={"human_review_approved": True}
-)
-```
-
-## 📁 项目结构
-
-```
-pod_multi_agent_system/
-├── main.py                 # 主入口文件
-├── requirements.txt        # 依赖
-├── README.md              # 文档
-│
-├── core/                   # 核心模块
-│   ├── __init__.py
-│   ├── state.py           # 状态定义 (PODState)
-│   ├── workflow.py        # 工作流编排 (StateGraph)
-│   └── base_agent.py      # Agent基类
-│
-├── agents/                 # Agent实现
-│   ├── __init__.py
-│   ├── trend_analysis_agent.py
-│   ├── design_generation_agent.py
-│   ├── quality_check_agent.py
-│   ├── mockup_creation_agent.py
-│   ├── seo_optimization_agent.py
-│   ├── platform_upload_agent.py
-│   └── optimization_agent.py
-│
-├── config/                 # 配置管理
-│   ├── __init__.py
-│   └── settings.py
-│
-└── utils/                  # 工具函数
-    └── __init__.py
 ```
 
 ## 🔑 核心特性
 
-### 1. 状态管理 (State Management)
-
-```python
-class PODState(TypedDict):
-    # 输入参数层
-    niche: str
-    style: str
-    
-    # 处理结果层 - 使用Annotated实现列表累加
-    designs: Annotated[List[DesignData], operator.add]
-    products: Annotated[List[ProductData], operator.add]
-    
-    # 元数据层
-    retry_count: int
-    errors: Annotated[List[Dict], operator.add]
-```
-
-### 2. 条件路由 (Conditional Edges)
-
-```python
-workflow.add_conditional_edges(
-    "quality_check",
-    route_quality_check,
-    {
-        "pass": "mockup_creation",    # 通过 -> 下一阶段
-        "retry": "design_generation", # 重试 -> 循环
-        "fail": END                   # 失败 -> 结束
-    }
-)
-```
-
-### 3. Checkpoint持久化
-
-```python
-from langgraph.checkpoint.postgres import PostgresSaver
-
-# 使用PostgreSQL持久化
-checkpointer = PostgresSaver.from_conn_string(DATABASE_URL)
-app = workflow.compile(checkpointer=checkpointer)
-
-# 故障后可以精确恢复
-state = app.get_state({"configurable": {"thread_id": "xxx"}})
-```
-
-### 4. Human-in-the-Loop
-
-```python
-# 在特定节点暂停
-app = workflow.compile(
-    checkpointer=memory,
-    interrupt_before=["human_review"]
-)
-
-# 人工审核后继续
-app.update_state(config, {"human_review_approved": True})
-```
+- **多智能体协作**: 8 个专业化 Agent 协同工作
+- **质量控制循环**: 设计质量自动重试机制
+- **断点续传**: 支持从失败节点精确恢复
+- **人机协作**: 需要时可接入人工审核
+- **RESTful API**: 完整的 API 接口供前端集成
+- **现代化仪表盘**: 实时工作流监控
 
 ## 📊 性能指标
 
 | 指标 | 数值 |
 |------|------|
-| 端到端时间 | ~15分钟 (5个设计) |
+| 端到端时间 | ~15分钟（5个设计） |
 | 人工操作减少 | 80% |
 | 系统稳定性 | 99.7% |
 | 故障恢复时间 | <30秒 |
 | 平均设计成本 | ~$0.15/个 |
 
-## 🛡️ 容错机制
+## 📝 开源许可
 
-1. **节点级重试**: 指数退避策略 (max_retries=3)
-2. **Checkpoint恢复**: 从失败节点精确恢复
-3. **幂等性设计**: 相同输入产生相同输出
-4. **健康检查**: 恢复前验证状态完整性
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
-## 🔍 调试
+## 🤝 参与贡献
 
-启用详细日志：
+欢迎提交 Issue 和 Pull Request！
 
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
+## 📧 联系方式
 
-使用LangSmith追踪：
-
-```bash
-export LANGCHAIN_TRACING_V2=true
-export LANGCHAIN_API_KEY=your_langsmith_api_key
-```
-
-## 📝 License
-
-MIT License
-
-## 🤝 Contributing
-
-欢迎提交Issue和Pull Request！
-
-## 📧 Contact
-
-如有问题，请联系项目维护者。
+如有问题，请在 GitHub 上提交 Issue。
