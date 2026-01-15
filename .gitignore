@@ -133,3 +133,6 @@ next-env.d.ts
 *.bak
 *.backup
 *.orig
+
+# Misc
+response.json

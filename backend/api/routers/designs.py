@@ -17,6 +17,12 @@ router = APIRouter(prefix="/designs", tags=["Designs"])
 from api.routers.workflows import _workflows
 
 
+def safe_get(d: dict, key: str, default=""):
+    """安全获取字典值，None 视为缺失"""
+    val = d.get(key)
+    return val if val is not None else default
+
+
 @router.get(
     "",
     response_model=List[DesignResponse],
@@ -45,26 +51,26 @@ async def list_designs(
     
     # Apply filters
     if style:
-        all_designs = [d for d in all_designs if d.get("style", "").lower() == style.lower()]
+        all_designs = [d for d in all_designs if safe_get(d, "style", "").lower() == style.lower()]
     
     if min_quality_score is not None:
         all_designs = [d for d in all_designs if (d.get("quality_score") or 0) >= min_quality_score]
     
     # Sort by created_at (newest first)
-    all_designs.sort(key=lambda d: d.get("created_at", ""), reverse=True)
+    all_designs.sort(key=lambda d: safe_get(d, "created_at", ""), reverse=True)
     
     # Paginate
     all_designs = all_designs[offset:offset + limit]
     
-    # Convert to response format
+    # Convert to response format - 使用 safe_get 避免 None 值
     return [
         DesignResponse(
-            design_id=d.get("design_id", ""),
-            prompt=d.get("prompt", ""),
-            image_url=d.get("image_url", ""),
-            style=d.get("style", ""),
-            keywords=d.get("keywords", []),
-            created_at=d.get("created_at", ""),
+            design_id=safe_get(d, "design_id"),
+            prompt=safe_get(d, "prompt"),
+            image_url=safe_get(d, "image_url"),
+            style=safe_get(d, "style"),
+            keywords=d.get("keywords") or [],
+            created_at=safe_get(d, "created_at"),
             quality_score=d.get("quality_score"),
             quality_issues=d.get("quality_issues"),
         )
@@ -86,12 +92,12 @@ async def get_design(design_id: str):
         for design in workflow.get("designs", []):
             if design.get("design_id") == design_id:
                 return DesignResponse(
-                    design_id=design.get("design_id", ""),
-                    prompt=design.get("prompt", ""),
-                    image_url=design.get("image_url", ""),
-                    style=design.get("style", ""),
-                    keywords=design.get("keywords", []),
-                    created_at=design.get("created_at", ""),
+                    design_id=safe_get(design, "design_id"),
+                    prompt=safe_get(design, "prompt"),
+                    image_url=safe_get(design, "image_url"),
+                    style=safe_get(design, "style"),
+                    keywords=design.get("keywords") or [],
+                    created_at=safe_get(design, "created_at"),
                     quality_score=design.get("quality_score"),
                     quality_issues=design.get("quality_issues"),
                 )

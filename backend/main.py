@@ -17,12 +17,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from api.schemas import HealthResponse, ErrorResponse
-from api.routers import workflows_router, designs_router, listings_router
+from api.routers import workflows_router, designs_router, listings_router, products_router, utils_router
 from config import load_config_from_env
 
 # Configure logging
@@ -97,15 +98,10 @@ This API provides endpoints to manage the POD (Print-on-Demand) workflow powered
 )
 
 
-# Configure CORS
+# Configure CORS - Allow all origins for demo deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",      # Next.js dev server
-        "http://127.0.0.1:3000",
-        "http://localhost:5173",      # Vite dev server
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=["*"],  # Allow all origins for demo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -169,9 +165,20 @@ async def root():
 
 
 # Include routers with /api/v1 prefix
+# Include routers with /api/v1 prefix
 app.include_router(workflows_router, prefix="/api/v1")
 app.include_router(designs_router, prefix="/api/v1")
 app.include_router(listings_router, prefix="/api/v1")
+app.include_router(products_router, prefix="/api/v1")
+app.include_router(utils_router, prefix="/api/v1")
+
+# Mount static files for serving generated images
+# Create directory if it doesn't exist
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+DESIGNS_DIR = os.path.join(STATIC_DIR, "designs")
+os.makedirs(DESIGNS_DIR, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 # Run with uvicorn when executed directly

@@ -56,6 +56,14 @@ function StatCard({
     );
 }
 
+const STATUS_LABELS: Record<string, string> = {
+    completed: '已完成',
+    running: '运行中',
+    pending: '等待中',
+    failed: '失败',
+    paused: '已暂停',
+};
+
 function StatusBadge({ status }: { status: string }) {
     const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
         completed: { variant: "default", icon: CheckCircle2 },
@@ -71,7 +79,7 @@ function StatusBadge({ status }: { status: string }) {
     return (
         <Badge variant={config.variant} className="gap-1">
             <Icon className="h-3 w-3" />
-            {status}
+            {STATUS_LABELS[status] || status}
         </Badge>
     );
 }
@@ -94,15 +102,15 @@ export default function DashboardPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">总览</h2>
                     <p className="text-muted-foreground">
-                        Welcome back! Here&apos;s an overview of your POD business.
+                        欢迎回来！这是您的 POD 业务概览。
                     </p>
                 </div>
                 <Link href="/campaign/new">
                     <Button className="gap-2">
                         <Plus className="h-4 w-4" />
-                        New Campaign
+                        新建活动
                     </Button>
                 </Link>
             </div>
@@ -113,9 +121,9 @@ export default function DashboardPage() {
                     <CardContent className="flex items-center gap-3 py-4">
                         <AlertCircle className="h-5 w-5 text-destructive" />
                         <div>
-                            <p className="font-medium text-destructive">Backend Connection Error</p>
+                            <p className="font-medium text-destructive">后端连接错误</p>
                             <p className="text-sm text-muted-foreground">
-                                Make sure the API server is running at http://localhost:8000
+                                请确保 API 服务器已在 http://localhost:8000 运行
                             </p>
                         </div>
                     </CardContent>
@@ -125,38 +133,38 @@ export default function DashboardPage() {
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Total Revenue"
-                    value={`$${totalRevenue.toFixed(2)}`}
-                    description={`From ${completedWorkflows.length} completed workflows`}
+                    title="总收入"
+                    value={`¥${(totalRevenue * 7).toFixed(2)}`}
+                    description={`来自 ${completedWorkflows.length} 个已完成工作流`}
                     icon={DollarSign}
                     loading={workflowsLoading}
                 />
                 <StatCard
-                    title="Designs Generated"
+                    title="已生成设计"
                     value={designStats?.total_designs || 0}
                     description={designStats?.average_quality_score
-                        ? `Avg quality: ${(designStats.average_quality_score * 100).toFixed(0)}%`
-                        : "No designs yet"
+                        ? `平均质量: ${(designStats.average_quality_score * 100).toFixed(0)}%`
+                        : "暂无设计"
                     }
                     icon={ImageIcon}
                     loading={designsLoading}
                 />
                 <StatCard
-                    title="Active Listings"
+                    title="活跃商品"
                     value={listingStats?.total_listings || 0}
                     description={Object.entries(listingStats?.platforms || {})
                         .map(([k, v]) => `${k}: ${v}`)
-                        .join(', ') || "No listings yet"
+                        .join(', ') || "暂无商品"
                     }
                     icon={ShoppingBag}
                     loading={listingsLoading}
                 />
                 <StatCard
-                    title="Active Workflows"
+                    title="活跃工作流"
                     value={activeWorkflows.length}
                     description={health?.langgraph_available
-                        ? "LangGraph connected"
-                        : "Using mock mode"
+                        ? "LangGraph 已连接"
+                        : "模拟模式"
                     }
                     icon={Activity}
                     loading={workflowsLoading || healthLoading}
@@ -168,9 +176,9 @@ export default function DashboardPage() {
                 {/* Recent Workflows */}
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Recent Workflows</CardTitle>
+                        <CardTitle>最近的工作流</CardTitle>
                         <CardDescription>
-                            Your latest POD generation workflows
+                            您最近的 POD 生成工作流
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -190,10 +198,10 @@ export default function DashboardPage() {
                         ) : workflows.length === 0 ? (
                             <div className="text-center py-8">
                                 <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                                <p className="text-muted-foreground mb-4">No workflows yet</p>
+                                <p className="text-muted-foreground mb-4">暂无工作流</p>
                                 <Link href="/campaign/new">
                                     <Button variant="outline" size="sm">
-                                        Create your first campaign
+                                        创建您的第一个活动
                                     </Button>
                                 </Link>
                             </div>
@@ -209,7 +217,7 @@ export default function DashboardPage() {
                                                 {workflow.niche} - {workflow.style}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                {workflow.designs?.length || 0} designs • {workflow.listings?.length || 0} listings
+                                                {workflow.designs?.length || 0} 个设计 • {workflow.listings?.length || 0} 个商品
                                             </p>
                                         </div>
                                         <StatusBadge status={workflow.status} />
@@ -223,9 +231,9 @@ export default function DashboardPage() {
                 {/* Quality Distribution */}
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Design Quality</CardTitle>
+                        <CardTitle>设计质量</CardTitle>
                         <CardDescription>
-                            Quality distribution of generated designs
+                            已生成设计的质量分布
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -239,7 +247,7 @@ export default function DashboardPage() {
                             <div className="text-center py-8">
                                 <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                                 <p className="text-muted-foreground">
-                                    No design data yet
+                                    暂无设计数据
                                 </p>
                             </div>
                         ) : (
@@ -249,7 +257,7 @@ export default function DashboardPage() {
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="flex items-center gap-2">
                                             <div className="h-3 w-3 rounded-full bg-green-500" />
-                                            High Quality (≥80%)
+                                            高质量 (≥80%)
                                         </span>
                                         <span className="font-medium">
                                             {designStats.quality_distribution.high}
@@ -270,7 +278,7 @@ export default function DashboardPage() {
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="flex items-center gap-2">
                                             <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                                            Medium Quality (50-79%)
+                                            中等质量 (50-79%)
                                         </span>
                                         <span className="font-medium">
                                             {designStats.quality_distribution.medium}
@@ -291,7 +299,7 @@ export default function DashboardPage() {
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="flex items-center gap-2">
                                             <div className="h-3 w-3 rounded-full bg-red-500" />
-                                            Low Quality (&lt;50%)
+                                            低质量 (&lt;50%)
                                         </span>
                                         <span className="font-medium">
                                             {designStats.quality_distribution.low}
@@ -309,7 +317,7 @@ export default function DashboardPage() {
 
                                 {/* Styles */}
                                 <div className="pt-4 border-t">
-                                    <p className="text-sm font-medium mb-2">Styles</p>
+                                    <p className="text-sm font-medium mb-2">风格统计</p>
                                     <div className="flex flex-wrap gap-2">
                                         {Object.entries(designStats.styles || {}).map(([style, count]) => (
                                             <Badge key={style} variant="secondary">

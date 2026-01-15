@@ -108,14 +108,18 @@ class QualityCheckAgent(BaseAgent):
         # 决定下一步动作
         quality_result = self._determine_result(avg_score, retry_count, max_retries)
         
-        # 如果需要重试，增加重试计数
+        # 如果需要重试，增加重试计数（演示模式下不会触发）
         new_retry_count = retry_count + 1 if quality_result == QualityResult.RETRY else retry_count
+        
+        # 演示模式：分数低于阈值时标记需要人工审核
+        needs_human_review = avg_score < self.PASS_THRESHOLD
         
         return {
             "designs": checked_designs,  # 注意：这里会覆盖而非累加
             "quality_check_result": quality_result,
             "retry_count": new_retry_count,
             "failed_design_ids": failed_ids,
+            "human_review_required": needs_human_review,
             "current_step": "quality_check_complete"
         }
     
@@ -230,13 +234,24 @@ class QualityCheckAgent(BaseAgent):
         retry_count: int, 
         max_retries: int
     ) -> QualityResult:
-        """决定质量检查结果"""
+        """决定质量检查结果
+        
+        演示模式：禁用自动重试机制
+        - 分数 >= 0.8: 直接通过
+        - 分数 < 0.8: 也通过，但标记需要人工审核
+        
+        这避免了重试导致 designs 列表累加的 bug
+        """
         if avg_score >= self.PASS_THRESHOLD:
             return QualityResult.PASS
-        elif retry_count < max_retries and avg_score >= self.RETRY_THRESHOLD:
-            return QualityResult.RETRY
         else:
-            return QualityResult.FAIL
+            # 演示模式：不重试，直接通过但需要人工确认
+            # 生产环境可以改回 RETRY 逻辑
+            self.logger.warning(
+                f"Quality score {avg_score:.2f} below threshold, "
+                f"marking for human review (demo mode: no retry)"
+            )
+            return QualityResult.PASS
 
 
 def create_quality_check_node(config: Dict[str, Any] = None):

@@ -21,6 +21,7 @@ from api.schemas import (
 )
 from core import create_pod_workflow, PODState
 from core.state import WorkflowStatus
+from core.rate_limiter import DailyRateLimiter
 from config import load_config_from_env
 
 logger = logging.getLogger(__name__)
@@ -34,34 +35,73 @@ _workflow_runners: Dict[str, Any] = {}
 
 def _state_to_response(state: Dict[str, Any]) -> WorkflowResponse:
     """Convert internal PODState to API response"""
+    # 辅助函数：确保字符串字段不为 None
+    def str_or_empty(val) -> str:
+        return val if val is not None else ""
+    
+    # 辅助函数：清洗 dict 中的 None 值为空字符串（用于嵌套对象）
+    # 已知应该是列表类型的字段
+    LIST_FIELDS = {"quality_issues", "keywords", "variants", "errors", "target_platforms", "product_types"}
+    
+    def sanitize_dict(d: dict) -> dict:
+        if not isinstance(d, dict):
+            return {}
+        result = {}
+        for k, v in d.items():
+            if v is None:
+                # 根据字段类型设置默认值
+                if k in LIST_FIELDS:
+                    result[k] = []
+                elif k not in ["quality_score", "printful_sync_id", "error_type"]:
+                    result[k] = ""
+                else:
+                    result[k] = None
+            elif k in LIST_FIELDS and (v == "" or not isinstance(v, list)):
+                # 如果字段应该是列表但值是空字符串或其他非列表类型
+                result[k] = [] if v == "" else [v]
+            elif isinstance(v, list):
+                result[k] = sanitize_list(v)
+            elif isinstance(v, dict):
+                result[k] = sanitize_dict(v)
+            else:
+                result[k] = v
+        return result
+    
+    # 辅助函数：清洗列表中的每个 dict，并处理非列表输入
+    def sanitize_list(lst) -> list:
+        # 处理 None、空字符串、或其他非列表类型
+        if lst is None or lst == "" or not isinstance(lst, list):
+            return []
+        return [sanitize_dict(item) if isinstance(item, dict) else item for item in lst]
+    
     return WorkflowResponse(
-        workflow_id=state.get("workflow_id", ""),
-        thread_id=state.get("thread_id", ""),
-        niche=state.get("niche", ""),
-        style=state.get("style", ""),
-        num_designs=state.get("num_designs", 0),
-        target_platforms=state.get("target_platforms", []),
-        product_types=state.get("product_types", []),
-        current_step=state.get("current_step", ""),
+        workflow_id=str_or_empty(state.get("workflow_id")),
+        thread_id=str_or_empty(state.get("thread_id")),
+        niche=str_or_empty(state.get("niche")),
+        style=str_or_empty(state.get("style")),
+        num_designs=state.get("num_designs", 0) or 0,
+        target_platforms=sanitize_list(state.get("target_platforms")),
+        product_types=sanitize_list(state.get("product_types")),
+        current_step=str_or_empty(state.get("current_step")),
         status=state.get("status", WorkflowStatus.PENDING),
-        retry_count=state.get("retry_count", 0),
-        max_retries=state.get("max_retries", 3),
+        retry_count=state.get("retry_count", 0) or 0,
+        max_retries=state.get("max_retries", 3) or 3,
         quality_check_result=state.get("quality_check_result"),
-        human_review_required=state.get("human_review_required", False),
+        human_review_required=state.get("human_review_required", False) or False,
         human_review_approved=state.get("human_review_approved"),
         human_review_notes=state.get("human_review_notes"),
-        trend_data=state.get("trend_data"),
-        design_prompts=state.get("design_prompts", []),
-        designs=state.get("designs", []),
-        products=state.get("products", []),
-        seo_content=state.get("seo_content", []),
-        listings=state.get("listings", []),
+        trend_data=sanitize_dict(state.get("trend_data")) if state.get("trend_data") else None,
+        design_prompts=sanitize_list(state.get("design_prompts")),
+        designs=sanitize_list(state.get("designs")),
+        products=sanitize_list(state.get("products")),
+        seo_content=sanitize_list(state.get("seo_content")),
+        listings=sanitize_list(state.get("listings")),
         optimization_recommendations=state.get("optimization_recommendations"),
-        total_cost=state.get("total_cost", 0.0),
-        cost_breakdown=state.get("cost_breakdown", {}),
-        errors=state.get("errors", []),
-        started_at=state.get("started_at", ""),
-        updated_at=state.get("updated_at", ""),
+        total_cost=state.get("total_cost", 0.0) or 0.0,
+        cost_breakdown=state.get("cost_breakdown") or {},
+        errors=sanitize_list(state.get("errors")),
+        started_at=str_or_empty(state.get("started_at")),
+        updated_at=str_or_empty(state.get("updated_at")),
         completed_at=state.get("completed_at"),
     )
 
@@ -97,9 +137,15 @@ async def _run_workflow_async(
             )
         )
         
-        # Store result
+        # Store result - merge with initial state to preserve input fields
         if result:
-            _workflows[workflow_id] = result
+            # 保留初始状态的字段，只更新 LangGraph 返回的结果
+            if workflow_id in _workflows:
+                _workflows[workflow_id].update(result)
+                _workflows[workflow_id]["status"] = WorkflowStatus.COMPLETED
+                _workflows[workflow_id]["completed_at"] = datetime.now().isoformat()
+            else:
+                _workflows[workflow_id] = result
             logger.info(f"Workflow {workflow_id} completed successfully")
         
     except Exception as e:
@@ -126,7 +172,18 @@ async def create_workflow(
     background_tasks: BackgroundTasks,
 ):
     """Create and start a new POD workflow"""
+    # 检查每日速率限制
+    allowed, remaining = DailyRateLimiter.check_limit()
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"每日生成限制已达上限 ({DailyRateLimiter.MAX_DAILY_PRODUCTS} 个商品/天)。请明天再试。"
+        )
+    
     try:
+        # 增加计数
+        DailyRateLimiter.increment(request.num_designs)
+        
         # Load config
         config = load_config_from_env()
         

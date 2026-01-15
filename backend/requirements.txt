@@ -46,3 +46,8 @@ mypy>=1.8.0
 # Optional: LangSmith for debugging
 # langsmith>=0.1.0
 
+# Langfuse for LLM observability
+langfuse>=2.0.0
+
+# Pillow for local mockup generation
+Pillow>=10.0.0

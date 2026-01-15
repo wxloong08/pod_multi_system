@@ -532,7 +532,13 @@ class PODWorkflowRunner:
                 # 处理每个事件
                 for node_name, node_output in event.items():
                     logger.info(f"Completed node: {node_name}")
-                    final_state = node_output
+            
+            # 获取完整的累积状态（stream 只返回每个节点的增量更新）
+            state_snapshot = self.app.get_state(config)
+            if state_snapshot and state_snapshot.values:
+                final_state = dict(state_snapshot.values)
+                logger.info(f"Final state has {len(final_state.get('designs', []))} designs, "
+                           f"{len(final_state.get('products', []))} products")
             
             return final_state
             

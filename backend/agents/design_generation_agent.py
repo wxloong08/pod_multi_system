@@ -41,13 +41,24 @@ class DesignGenerationAgent(BaseAgent):
     
     @property
     def openai_client(self):
-        """延迟初始化OpenAI客户端"""
+        """延迟初始化OpenAI客户端（使用yunwu.ai中转）"""
         if self._openai_client is None:
             try:
                 from openai import AsyncOpenAI
-                self._openai_client = AsyncOpenAI(
-                    api_key=self.config.get("openai_api_key")
-                )
+                
+                # 优先使用yunwu API
+                yunwu_key = self.config.get("yunwu_api_key")
+                yunwu_base = self.config.get("yunwu_api_base", "https://yunwu.ai/v1")
+                openai_key = self.config.get("openai_api_key")
+                
+                api_key = yunwu_key or openai_key
+                if api_key:
+                    self._openai_client = AsyncOpenAI(
+                        api_key=api_key,
+                        base_url=yunwu_base if yunwu_key else None
+                    )
+                else:
+                    self.logger.warning("No API key found, using mock client")
             except ImportError:
                 self.logger.warning("openai not installed, using mock client")
         return self._openai_client
@@ -137,8 +148,8 @@ class DesignGenerationAgent(BaseAgent):
         # 增强提示词，确保适合POD打印
         enhanced_prompt = self._enhance_prompt(prompt, style)
         
-        # 调用DALL-E API
-        image_url = await self._call_dalle_api(enhanced_prompt)
+        # 调用DALL-E API 并保存到本地
+        image_url = await self._call_dalle_api(enhanced_prompt, design_id=design_id)
         
         # 从趋势分析的prompt中提取关键词
         keywords = self._extract_keywords(prompt, niche)
@@ -164,24 +175,95 @@ Professional quality, ready for commercial use."""
         
         return f"{prompt} {enhancement}"
     
-    async def _call_dalle_api(self, prompt: str) -> str:
-        """调用DALL-E API"""
+    async def _call_dalle_api(self, prompt: str, design_id: str = None) -> str:
+        """调用图像生成 API (yunwu.ai) 并保存到本地
+        
+        API文档: https://yunwu.apifox.cn/api-290549047
+        - gpt-image-1: 返回 b64_json (base64 编码的图片数据)
+        - dall-e-3: 可能返回 url 或 b64_json
+        
+        Returns:
+            本地图片路径 (如 /static/designs/design_xxx.png)
+        """
+        import os
+        import base64
+        
+        # 确保 design_id 存在
+        if not design_id:
+            design_id = f"design_{uuid.uuid4().hex[:12]}"
+        
+        # 本地保存路径
+        save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "designs")
+        os.makedirs(save_dir, exist_ok=True)
+        local_file = os.path.join(save_dir, f"{design_id}.png")
+        local_url = f"/static/designs/{design_id}.png"
+        
         if self.openai_client is None:
-            # Mock响应
-            return f"https://example.com/mock_image_{uuid.uuid4().hex[:8]}.png"
+            # Mock响应 - 创建一个占位图片
+            self.logger.warning(f"No API client, using mock image for {design_id}")
+            return f"https://example.com/mock_image_{design_id}.png"
+        
+        image_model = os.getenv("IMAGE_MODEL", "gpt-image-1")
+        image_size = os.getenv("IMAGE_SIZE", "1024x1024")
         
         try:
-            response = await self.openai_client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size="1024x1024",
-                quality="standard",
-                n=1
-            )
-            return response.data[0].url
+            # 构建基础参数
+            params = {
+                "model": image_model,
+                "prompt": prompt,
+                "size": image_size,
+                "n": 1
+            }
+            
+            # quality 参数仅 dall-e-3 支持
+            if image_model == "dall-e-3":
+                image_quality = os.getenv("IMAGE_QUALITY", "standard")
+                params["quality"] = image_quality
+            
+            self.logger.info(f"Calling image API: model={image_model}, size={image_size}")
+            
+            # 调用 API 生成图片
+            response = await self.openai_client.images.generate(**params)
+            
+            # 获取响应数据
+            image_data = response.data[0]
+            
+            # 处理 base64 编码的图片 (gpt-image-1 返回 b64_json)
+            if hasattr(image_data, 'b64_json') and image_data.b64_json:
+                self.logger.info(f"Received base64 image data, decoding and saving to {local_file}")
+                # 解码 base64 并保存到文件
+                image_bytes = base64.b64decode(image_data.b64_json)
+                with open(local_file, 'wb') as f:
+                    f.write(image_bytes)
+                self.logger.info(f"Image saved to {local_file} ({len(image_bytes)} bytes)")
+                return local_url
+            
+            # 处理 URL 响应 (dall-e-3 可能返回 url)
+            elif hasattr(image_data, 'url') and image_data.url:
+                self.logger.info(f"Received image URL, downloading to {local_file}")
+                import aiohttp
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(image_data.url) as resp:
+                            if resp.status == 200:
+                                with open(local_file, 'wb') as f:
+                                    f.write(await resp.read())
+                                self.logger.info(f"Image downloaded and saved to {local_file}")
+                                return local_url
+                            else:
+                                self.logger.warning(f"Failed to download image: HTTP {resp.status}")
+                                return image_data.url
+                except Exception as download_error:
+                    self.logger.warning(f"Image download failed: {download_error}")
+                    return image_data.url
+            else:
+                # 无法获取图片数据
+                self.logger.error(f"No image data in response: {response}")
+                raise AgentError(self.name, "No image data in API response")
+                
         except Exception as e:
-            self.logger.error(f"DALL-E API error: {e}")
-            raise AgentError(self.name, f"DALL-E generation failed: {e}")
+            self.logger.error(f"Image API error: {e}")
+            raise AgentError(self.name, f"Image generation failed: {e}")
     
     def _extract_keywords(self, prompt: str, niche: str) -> List[str]:
         """从提示词中提取关键词"""

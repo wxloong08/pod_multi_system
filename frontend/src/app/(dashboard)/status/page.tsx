@@ -20,45 +20,45 @@ import {
 
 const AGENTS = [
     {
-        name: 'Trend Analysis Agent',
-        description: 'Analyzes market trends using Claude 3.5 Sonnet',
-        tech: 'Claude 3.5 Sonnet',
+        name: '趋势分析 Agent',
+        description: '分析市场趋势，生成设计建议',
+        tech: 'Claude Haiku 4.5',
         step: 'trend_analysis'
     },
     {
-        name: 'Design Generation Agent',
-        description: 'Generates design images using DALL-E 3',
-        tech: 'DALL-E 3',
+        name: '设计生成 Agent',
+        description: '根据提示词生成设计图',
+        tech: 'GPT Image 1.5',
         step: 'design_generation'
     },
     {
-        name: 'Quality Check Agent',
-        description: 'Validates design quality with retry mechanism',
-        tech: 'Rules + LLM',
+        name: '质量检查 Agent',
+        description: '验证设计质量，支持自动重试',
+        tech: 'Claude Haiku 4.5',
         step: 'quality_check'
     },
     {
-        name: 'Mockup Creation Agent',
-        description: 'Creates product mockups via Printful',
+        name: 'Mockup 合成 Agent',
+        description: '创建产品 Mockup 预览图',
         tech: 'Printful API',
         step: 'mockup_creation'
     },
     {
-        name: 'SEO Optimization Agent',
-        description: 'Optimizes titles, descriptions, and tags',
-        tech: 'Claude 3.5 Sonnet',
+        name: 'SEO 优化 Agent',
+        description: '优化商品标题、描述和标签',
+        tech: 'Claude Haiku 4.5',
         step: 'seo_optimization'
     },
     {
-        name: 'Platform Upload Agent',
-        description: 'Publishes listings to marketplaces',
+        name: '平台上传 Agent',
+        description: '发布商品到电商平台',
         tech: 'Etsy/Amazon API',
         step: 'platform_upload'
     },
     {
-        name: 'Optimization Agent',
-        description: 'Analyzes performance and provides recommendations',
-        tech: 'Claude 3.5 Sonnet',
+        name: '数据优化 Agent',
+        description: '分析销售表现，提供优化建议',
+        tech: 'Claude Haiku 4.5',
         step: 'optimization'
     },
 ];
@@ -77,10 +77,10 @@ function AgentCard({
             <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                     <div className={`p-3 rounded-lg ${isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : isCompleted
-                                ? 'bg-green-500/10 text-green-500'
-                                : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground'
+                        : isCompleted
+                            ? 'bg-green-500/10 text-green-500'
+                            : 'bg-muted text-muted-foreground'
                         }`}>
                         {isActive ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
@@ -94,10 +94,10 @@ function AgentCard({
                         <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-semibold">{agent.name}</h3>
                             {isActive && (
-                                <Badge variant="default" className="text-xs">Running</Badge>
+                                <Badge variant="default" className="text-xs">运行中</Badge>
                             )}
                             {isCompleted && (
-                                <Badge variant="outline" className="text-xs text-green-500 border-green-500">Complete</Badge>
+                                <Badge variant="outline" className="text-xs text-green-500 border-green-500">已完成</Badge>
                             )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -134,14 +134,14 @@ export default function StatusPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Agent Status</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Agent 状态</h1>
                     <p className="text-muted-foreground">
-                        Monitor your multi-agent workflow system
+                        监控您的多 Agent 工作流系统
                     </p>
                 </div>
                 <Button variant="outline" onClick={handleRefresh} className="gap-2">
                     <RefreshCw className="h-4 w-4" />
-                    Refresh
+                    刷新
                 </Button>
             </div>
 
@@ -151,18 +151,18 @@ export default function StatusPage() {
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-lg ${health?.status === 'healthy'
-                                    ? 'bg-green-500/10 text-green-500'
-                                    : 'bg-red-500/10 text-red-500'
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-red-500/10 text-red-500'
                                 }`}>
                                 <Server className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">API Server</p>
+                                <p className="text-sm text-muted-foreground">API 服务器</p>
                                 {healthLoading ? (
                                     <Skeleton className="h-6 w-20" />
                                 ) : (
-                                    <p className="text-lg font-semibold capitalize">
-                                        {health?.status || 'Offline'}
+                                    <p className="text-lg font-semibold">
+                                        {health?.status === 'healthy' ? '正常' : '离线'}
                                     </p>
                                 )}
                             </div>
@@ -174,18 +174,18 @@ export default function StatusPage() {
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-lg ${health?.langgraph_available
-                                    ? 'bg-green-500/10 text-green-500'
-                                    : 'bg-yellow-500/10 text-yellow-500'
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-yellow-500/10 text-yellow-500'
                                 }`}>
                                 <Zap className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">LangGraph</p>
+                                <p className="text-sm text-muted-foreground">LangGraph 引擎</p>
                                 {healthLoading ? (
                                     <Skeleton className="h-6 w-20" />
                                 ) : (
                                     <p className="text-lg font-semibold">
-                                        {health?.langgraph_available ? 'Connected' : 'Mock Mode'}
+                                        {health?.langgraph_available ? '已连接' : '模拟模式'}
                                     </p>
                                 )}
                             </div>
@@ -197,13 +197,13 @@ export default function StatusPage() {
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-lg ${activeWorkflows.length > 0
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'bg-muted text-muted-foreground'
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground'
                                 }`}>
                                 <Activity className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Active Workflows</p>
+                                <p className="text-sm text-muted-foreground">活跃工作流</p>
                                 {workflowsLoading ? (
                                     <Skeleton className="h-6 w-12" />
                                 ) : (
@@ -223,11 +223,11 @@ export default function StatusPage() {
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-6 text-sm">
                             <div>
-                                <span className="text-muted-foreground">Version: </span>
+                                <span className="text-muted-foreground">版本: </span>
                                 <span className="font-mono">{health.version}</span>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">Last Check: </span>
+                                <span className="text-muted-foreground">上次检查: </span>
                                 <span>{new Date(health.timestamp).toLocaleTimeString()}</span>
                             </div>
                         </div>
@@ -238,9 +238,9 @@ export default function StatusPage() {
             {/* Agent Pipeline */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Agent Pipeline</CardTitle>
+                    <CardTitle>Agent 管道</CardTitle>
                     <CardDescription>
-                        Real-time status of each agent in the workflow
+                        工作流中各 Agent 的实时状态
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -272,7 +272,7 @@ export default function StatusPage() {
             {activeWorkflows.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Active Workflows</CardTitle>
+                        <CardTitle>活跃工作流</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -287,8 +287,8 @@ export default function StatusPage() {
                                             {workflow.niche} - {workflow.style}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            Step: {workflow.current_step} |
-                                            Designs: {workflow.designs?.length || 0}/{workflow.num_designs}
+                                            步骤: {workflow.current_step} |
+                                            设计: {workflow.designs?.length || 0}/{workflow.num_designs}
                                         </p>
                                     </div>
                                     <Badge variant="secondary">

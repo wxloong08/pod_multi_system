@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useCreateWorkflow } from "@/hooks";
 import { useUIStore } from "@/store";
@@ -23,12 +22,12 @@ import {
 import Link from "next/link";
 
 const STYLE_OPTIONS = [
-    { value: 'minimalist', label: 'Minimalist', description: 'Clean, simple designs' },
-    { value: 'vintage', label: 'Vintage', description: 'Retro, nostalgic style' },
-    { value: 'cartoon', label: 'Cartoon', description: 'Fun, illustrated look' },
-    { value: 'typography', label: 'Typography', description: 'Text-focused designs' },
-    { value: 'watercolor', label: 'Watercolor', description: 'Artistic, painted feel' },
-    { value: 'geometric', label: 'Geometric', description: 'Modern shapes & patterns' },
+    { value: 'minimalist', label: '极简风格', description: '简洁、干净的设计' },
+    { value: 'vintage', label: '复古风格', description: '怀旧、经典的风格' },
+    { value: 'cartoon', label: '卡通风格', description: '有趣、插画风' },
+    { value: 'typography', label: '字体设计', description: '以文字为主的设计' },
+    { value: 'watercolor', label: '水彩风格', description: '艺术、手绘感' },
+    { value: 'geometric', label: '几何图形', description: '现代图案与形状' },
 ];
 
 const PLATFORM_OPTIONS = [
@@ -37,12 +36,12 @@ const PLATFORM_OPTIONS = [
 ];
 
 const PRODUCT_OPTIONS = [
-    { value: 't-shirt', label: 'T-Shirt' },
-    { value: 'mug', label: 'Mug' },
-    { value: 'poster', label: 'Poster' },
-    { value: 'hoodie', label: 'Hoodie' },
-    { value: 'tote-bag', label: 'Tote Bag' },
-    { value: 'phone-case', label: 'Phone Case' },
+    { value: 't-shirt', label: 'T恤' },
+    { value: 'mug', label: '马克杯' },
+    { value: 'poster', label: '海报' },
+    { value: 'hoodie', label: '帽衫' },
+    { value: 'tote-bag', label: '帆布袋' },
+    { value: 'phone-case', label: '手机壳' },
 ];
 
 export default function NewCampaignPage() {
@@ -74,17 +73,16 @@ export default function NewCampaignPage() {
 
             addNotification({
                 type: 'success',
-                title: 'Workflow Created',
-                message: `Started generating ${formData.numDesigns} designs for "${formData.niche}"`,
+                title: '工作流已创建',
+                message: `已开始为 "${formData.niche}" 生成 ${formData.numDesigns} 个设计`,
             });
 
-            // Navigate to dashboard
             router.push('/dashboard');
         } catch (error) {
             addNotification({
                 type: 'error',
-                title: 'Failed to Create Workflow',
-                message: error instanceof Error ? error.message : 'Unknown error occurred',
+                title: '创建工作流失败',
+                message: error instanceof Error ? error.message : '未知错误',
             });
         }
     };
@@ -117,9 +115,9 @@ export default function NewCampaignPage() {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">New Campaign</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">新建活动</h1>
                     <p className="text-muted-foreground">
-                        Create a new POD design generation workflow
+                        创建新的 POD 设计生成工作流
                     </p>
                 </div>
             </div>
@@ -130,18 +128,18 @@ export default function NewCampaignPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Target className="h-5 w-5 text-primary" />
-                            Target Niche
+                            目标市场
                         </CardTitle>
                         <CardDescription>
-                            Enter the niche market you want to target (e.g., &quot;cat lovers&quot;, &quot;fitness enthusiasts&quot;)
+                            输入您想要定位的市场（例如："猫咪爱好者"、"健身达人"）
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
-                            <Label htmlFor="niche">Niche Market</Label>
+                            <Label htmlFor="niche">市场细分</Label>
                             <Input
                                 id="niche"
-                                placeholder="e.g., cat lovers, coffee addicts, yoga enthusiasts"
+                                placeholder="例如：猫咪爱好者、咖啡迷、瑜伽爱好者"
                                 value={formData.niche}
                                 onChange={(e) => setFormData(prev => ({ ...prev, niche: e.target.value }))}
                                 required
@@ -156,10 +154,10 @@ export default function NewCampaignPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Palette className="h-5 w-5 text-primary" />
-                            Design Style
+                            设计风格
                         </CardTitle>
                         <CardDescription>
-                            Choose the visual style for your designs
+                            选择您设计的视觉风格
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -170,8 +168,8 @@ export default function NewCampaignPage() {
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, style: style.value }))}
                                     className={`p-4 rounded-lg border-2 text-left transition-all ${formData.style === style.value
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-muted hover:border-primary/50'
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-muted hover:border-primary/50'
                                         }`}
                                 >
                                     <div className="font-medium flex items-center gap-2">
@@ -194,15 +192,15 @@ export default function NewCampaignPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-primary" />
-                            Generation Settings
+                            生成设置
                         </CardTitle>
                         <CardDescription>
-                            Configure how many designs to generate
+                            配置生成设计的数量
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="numDesigns">Number of Designs</Label>
+                            <Label htmlFor="numDesigns">设计数量</Label>
                             <div className="flex items-center gap-4">
                                 <Input
                                     id="numDesigns"
@@ -217,7 +215,7 @@ export default function NewCampaignPage() {
                                     className="w-24"
                                 />
                                 <span className="text-sm text-muted-foreground">
-                                    Estimated cost: ${(formData.numDesigns * 0.04).toFixed(2)}
+                                    预估成本: ¥{(formData.numDesigns * 0.04).toFixed(2)}
                                 </span>
                             </div>
                         </div>
@@ -234,7 +232,7 @@ export default function NewCampaignPage() {
                                 className="rounded border-input"
                             />
                             <Label htmlFor="humanReview" className="text-sm font-normal">
-                                Require human review before publishing
+                                发布前需要人工审核
                             </Label>
                         </div>
                     </CardContent>
@@ -245,10 +243,10 @@ export default function NewCampaignPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Store className="h-5 w-5 text-primary" />
-                            Target Platforms
+                            目标平台
                         </CardTitle>
                         <CardDescription>
-                            Select where to publish your listings
+                            选择要发布商品的平台
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -262,8 +260,8 @@ export default function NewCampaignPage() {
                                         type="button"
                                         onClick={() => togglePlatform(platform.value)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${isSelected
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-muted hover:border-primary/50'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-muted hover:border-primary/50'
                                             }`}
                                     >
                                         <Icon className={`h-4 w-4 ${isSelected ? 'text-primary' : ''}`} />
@@ -281,10 +279,10 @@ export default function NewCampaignPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Package className="h-5 w-5 text-primary" />
-                            Product Types
+                            产品类型
                         </CardTitle>
                         <CardDescription>
-                            Select which products to create mockups for
+                            选择要创建 Mockup 的产品类型
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -309,7 +307,7 @@ export default function NewCampaignPage() {
                 {/* Submit */}
                 <div className="flex items-center justify-between pt-4">
                     <Link href="/dashboard">
-                        <Button variant="outline" type="button">Cancel</Button>
+                        <Button variant="outline" type="button">取消</Button>
                     </Link>
                     <Button
                         type="submit"
@@ -319,12 +317,12 @@ export default function NewCampaignPage() {
                         {createWorkflow.isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Creating...
+                                创建中...
                             </>
                         ) : (
                             <>
                                 <Sparkles className="h-4 w-4" />
-                                Start Campaign
+                                开始生成
                             </>
                         )}
                     </Button>

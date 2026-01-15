@@ -64,64 +64,66 @@ class WorkflowApproveRequest(BaseModel):
 
 class DesignResponse(BaseModel):
     """Design data response"""
-    design_id: str
-    prompt: str
-    image_url: str
-    style: str
-    keywords: List[str]
-    created_at: str
+    design_id: str = ""
+    prompt: str = ""
+    image_url: str = ""
+    style: str = ""
+    keywords: List[str] = []
+    created_at: str = ""
     quality_score: Optional[float] = None
     quality_issues: Optional[List[str]] = None
 
 
 class ProductResponse(BaseModel):
     """Product data response"""
-    product_id: str
-    design_id: str
-    mockup_url: str
-    product_type: str
-    variant_ids: List[str]
+    product_id: str = ""
+    design_id: str = ""
+    mockup_url: str = ""
+    product_type: str = ""
+    variant_ids: List[str] = []
     printful_sync_id: Optional[str] = None
-    created_at: str
+    created_at: str = ""
 
 
 class SEODataResponse(BaseModel):
     """SEO data response"""
-    design_id: str
-    title: str
-    description: str
-    tags: List[str]
-    keywords: List[str]
-    optimized_at: str
+    design_id: str = ""
+    title: str = ""
+    description: str = ""
+    tags: List[str] = []
+    keywords: List[str] = []
+    optimized_at: str = ""
 
 
 class ListingResponse(BaseModel):
     """Listing data response"""
-    listing_id: str
-    design_id: str
-    platform: str
-    listing_url: str
-    status: str
-    listed_at: str
+    listing_id: str = ""
+    design_id: str = ""
+    platform: str = ""
+    listing_url: str = ""
+    status: str = ""
+    listed_at: str = ""
+
 
 
 class TrendDataResponse(BaseModel):
     """Trend analysis data response"""
-    sub_topics: List[str]
-    keywords: List[str]
-    audience: Dict[str, str]
-    competition_level: str
+    sub_topics: List[str] = []
+    keywords: List[str] = []
+    audience: Dict[str, Any] = {}  # Changed from Dict[str, str] to handle Any
+    competition_level: str = ""
     seasonal_trends: Optional[List[str]] = None
-    recommended_styles: List[str]
-    analyzed_at: str
+    recommended_styles: List[str] = []
+    analyzed_at: str = ""
 
 
 class ErrorInfo(BaseModel):
     """Error information"""
-    step: str
+    step: str = ""
     error_type: Optional[str] = None
-    message: str
-    timestamp: str
+    message: str = ""
+    timestamp: str = ""
+
 
 
 class WorkflowResponse(BaseModel):

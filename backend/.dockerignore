@@ -1,0 +1,32 @@
+# Ignore Python cache and venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv/
+
+# Ignore environment files (sensitive data)
+.env
+*.env.local
+
+# Ignore logs
+*.log
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore test files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ignore build artifacts
+dist/
+build/
+*.egg-info/

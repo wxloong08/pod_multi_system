@@ -63,12 +63,15 @@ class TrendAnalysisAgent(LLMAgent):
         
         self.logger.info(
             f"Analysis complete: {len(trend_data['keywords'])} keywords, "
-            f"{len(design_prompts)} design prompts"
+            f"{len(design_prompts)} design prompts (limiting to {num_designs})"
         )
+        
+        # 确保只返回用户请求的设计数量（LLM 可能返回更多）
+        limited_prompts = design_prompts[:num_designs]
         
         return {
             "trend_data": trend_data,
-            "design_prompts": design_prompts,
+            "design_prompts": limited_prompts,
             "current_step": "trend_analysis_complete"
         }
     

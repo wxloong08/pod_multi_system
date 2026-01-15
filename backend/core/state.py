@@ -5,7 +5,7 @@ POD多智能体系统 - 状态定义
 状态设计原则：
 1. 类型安全：使用TypedDict确保字段类型
 2. 分层设计：输入参数层、处理结果层、元数据层分离
-3. 列表累加：使用Annotated[List, operator.add]实现列表合并
+3. 列表合并：使用自定义 reducer 实现按 ID 去重合并
 4. 最小化：只保存必要信息，大对象存储URL而非二进制
 """
 
@@ -13,6 +13,33 @@ import operator
 from typing import TypedDict, List, Dict, Optional, Annotated
 from datetime import datetime
 from enum import Enum
+
+
+def merge_designs(existing: List[Dict], new: List[Dict]) -> List[Dict]:
+    """
+    按 design_id 合并设计列表
+    新的设计会更新（替换）已有的相同 ID 的设计，而不是追加
+    
+    这解决了 quality_check 更新设计分数时导致重复的问题
+    """
+    if not existing:
+        return new or []
+    if not new:
+        return existing
+    
+    # 使用字典按 design_id 合并，新的会覆盖旧的
+    merged = {}
+    for design in existing:
+        design_id = design.get("design_id")
+        if design_id:
+            merged[design_id] = design
+    
+    for design in new:
+        design_id = design.get("design_id")
+        if design_id:
+            merged[design_id] = design  # 新的覆盖旧的
+    
+    return list(merged.values())
 
 
 class WorkflowStatus(str, Enum):
@@ -124,8 +151,8 @@ class PODState(TypedDict):
     # 设计提示词列表（趋势分析后生成）
     design_prompts: Annotated[List[str], operator.add]
     
-    # 生成的设计列表（支持累加，多次生成的设计会合并）
-    designs: Annotated[List[DesignData], operator.add]
+    # 生成的设计列表（按 design_id 去重合并，quality_check 更新不会导致重复）
+    designs: Annotated[List[DesignData], merge_designs]
     
     # 合成的产品列表
     products: Annotated[List[ProductData], operator.add]

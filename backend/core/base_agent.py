@@ -191,12 +191,14 @@ class LLMAgent(BaseAgent):
     def __init__(
         self,
         config: Optional[Dict[str, Any]] = None,
-        model: str = "claude-3-5-sonnet-20241022",
-        temperature: float = 0.3
+        model: str = None,
+        temperature: float = None
     ):
         super().__init__(config)
-        self.model = model
-        self.temperature = temperature
+        import os
+        # 从环境变量读取模型配置，支持参数覆盖
+        self.model = model or os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
+        self.temperature = temperature if temperature is not None else float(os.getenv("LLM_TEMPERATURE", "0.3"))
         self._llm = None
     
     @property
@@ -209,17 +211,80 @@ class LLMAgent(BaseAgent):
     def _create_llm(self):
         """
         创建LLM客户端
-        子类可以重写此方法使用不同的LLM
+        使用yunwu.ai中转API（OpenAI兼容格式）
+        集成Langfuse进行LLM调用监控
         """
         try:
-            from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(
-                model=self.model,
-                temperature=self.temperature,
-                api_key=self.config.get("anthropic_api_key")
-            )
+            from langchain_openai import ChatOpenAI
+            
+            # 尝试初始化Langfuse回调
+            callbacks = self._get_langfuse_callbacks()
+            
+            # 优先使用yunwu API，否则降级到原始Anthropic API
+            yunwu_key = self.config.get("yunwu_api_key")
+            yunwu_base = self.config.get("yunwu_api_base", "https://yunwu.ai/v1")
+            
+            if yunwu_key:
+                llm = ChatOpenAI(
+                    model=self.model,
+                    temperature=self.temperature,
+                    api_key=yunwu_key,
+                    base_url=yunwu_base,
+                    callbacks=callbacks
+                )
+                self.logger.info(f"LLM initialized: {self.model} via yunwu.ai" + 
+                               (" with Langfuse" if callbacks else ""))
+                return llm
+            
+            # 降级：使用原始Anthropic API
+            anthropic_key = self.config.get("anthropic_api_key")
+            if anthropic_key:
+                try:
+                    from langchain_anthropic import ChatAnthropic
+                    return ChatAnthropic(
+                        model=self.model,
+                        temperature=self.temperature,
+                        api_key=anthropic_key,
+                        callbacks=callbacks
+                    )
+                except ImportError:
+                    pass
+            
+            self.logger.warning("No valid API key found, using mock LLM")
+            return None
         except ImportError:
-            self.logger.warning("langchain_anthropic not installed, using mock LLM")
+            self.logger.warning("langchain_openai not installed, using mock LLM")
+            return None
+    
+    def _get_langfuse_callbacks(self):
+        """获取Langfuse回调处理器用于LLM监控
+        
+        新版 Langfuse SDK 自动从环境变量读取配置:
+        - LANGFUSE_PUBLIC_KEY
+        - LANGFUSE_SECRET_KEY  
+        - LANGFUSE_HOST
+        """
+        try:
+            from langfuse.langchain import CallbackHandler
+            import os
+            
+            # 检查Langfuse配置 - 新版SDK从环境变量自动读取
+            public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+            secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+            
+            if public_key and secret_key:
+                # 新版SDK只需传递public_key或不传任何参数（使用env vars）
+                handler = CallbackHandler()
+                self.logger.info(f"Langfuse callback initialized for {self.name}")
+                return [handler]
+            else:
+                self.logger.warning("Langfuse keys not configured, skipping observability")
+                return None
+        except ImportError as e:
+            self.logger.warning(f"Langfuse langchain module not available: {e}")
+            return None
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize Langfuse: {e}")
             return None
     
     async def invoke_llm(self, prompt: str) -> str:

@@ -18,6 +18,13 @@ import {
     XCircle
 } from "lucide-react";
 
+const STATUS_LABELS: Record<string, string> = {
+    active: '在售',
+    pending: '等待中',
+    inactive: '已下架',
+    failed: '失败',
+};
+
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
         active: { variant: "default", icon: CheckCircle },
@@ -32,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
     return (
         <Badge variant={statusConfig.variant} className="gap-1">
             <Icon className="h-3 w-3" />
-            {status}
+            {STATUS_LABELS[status.toLowerCase()] || status}
         </Badge>
     );
 }
@@ -67,9 +74,9 @@ export default function ListingsPage() {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Listings</h1>
+                <h1 className="text-3xl font-bold tracking-tight">商品列表</h1>
                 <p className="text-muted-foreground">
-                    Manage your published product listings
+                    管理您已发布的商品
                 </p>
             </div>
 
@@ -78,7 +85,7 @@ export default function ListingsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold">{stats?.total_listings || 0}</div>
-                        <p className="text-xs text-muted-foreground">Total Listings</p>
+                        <p className="text-xs text-muted-foreground">商品总数</p>
                     </CardContent>
                 </Card>
                 {Object.entries(stats?.platforms || {}).map(([platform, count]) => (
@@ -99,7 +106,7 @@ export default function ListingsPage() {
                         <div className="text-2xl font-bold text-green-600">
                             {stats?.statuses?.active || 0}
                         </div>
-                        <p className="text-xs text-muted-foreground">Active</p>
+                        <p className="text-xs text-muted-foreground">在售中</p>
                     </CardContent>
                 </Card>
             </div>
@@ -109,7 +116,7 @@ export default function ListingsPage() {
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search listings..."
+                        placeholder="搜索商品..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -121,7 +128,7 @@ export default function ListingsPage() {
                         size="sm"
                         onClick={() => setPlatformFilter(undefined)}
                     >
-                        All
+                        全部
                     </Button>
                     {platforms.map(platform => (
                         <Button
@@ -141,9 +148,9 @@ export default function ListingsPage() {
             {/* Listings Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle>All Listings</CardTitle>
+                    <CardTitle>所有商品</CardTitle>
                     <CardDescription>
-                        {filteredListings.length} listings found
+                        共找到 {filteredListings.length} 个商品
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -162,20 +169,20 @@ export default function ListingsPage() {
                         </div>
                     ) : error ? (
                         <div className="py-12 text-center">
-                            <p className="text-destructive">Failed to load listings</p>
+                            <p className="text-destructive">加载商品失败</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Make sure the backend server is running
+                                请确保后端服务器正在运行
                             </p>
                         </div>
                     ) : filteredListings.length === 0 ? (
                         <div className="py-12 text-center">
                             <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                             <p className="text-muted-foreground">
-                                {searchQuery ? 'No listings match your search' : 'No listings yet'}
+                                {searchQuery ? '没有匹配的商品' : '暂无商品'}
                             </p>
                             {!searchQuery && (
                                 <Button variant="outline" className="mt-4" asChild>
-                                    <a href="/campaign/new">Create your first campaign</a>
+                                    <a href="/campaign/new">创建您的第一个活动</a>
                                 </Button>
                             )}
                         </div>
@@ -194,14 +201,17 @@ export default function ListingsPage() {
                                             {listing.listing_id}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            Design: {listing.design_id} • Listed: {new Date(listing.listed_at).toLocaleDateString()}
+                                            设计: {listing.design_id} • 上架时间: {new Date(listing.listed_at).toLocaleDateString('zh-CN')}
                                         </p>
                                     </div>
                                     <StatusBadge status={listing.status} />
-                                    <Button variant="ghost" size="sm" asChild>
-                                        <a href={listing.listing_url} target="_blank" rel="noopener noreferrer">
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => alert(`演示模式提示：\n本项目为演示系统，未连接真实电商环境，因此不执行外部跳转。`)}
+                                        title="查看商品 (模拟)"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
                                     </Button>
                                 </div>
                             ))}

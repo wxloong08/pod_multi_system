@@ -16,6 +16,11 @@ from pathlib import Path
 @dataclass
 class APIConfig:
     """API配置"""
+    # Yunwu.ai 中转API配置（推荐使用）
+    yunwu_api_key: Optional[str] = None
+    yunwu_api_base: str = "https://yunwu.ai/v1"
+    
+    # 原始API配置（作为后备选项）
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     printful_api_key: Optional[str] = None
@@ -29,7 +34,7 @@ class WorkflowConfig:
     max_retries: int = 3
     quality_threshold: float = 0.8
     human_review_required: bool = False
-    include_optimization: bool = True
+    include_optimization: bool = False  # 优化节点用于周期性评估，不在主工作流中执行
     
     # 默认产品配置
     default_platforms: list = field(default_factory=lambda: ["etsy"])
@@ -54,6 +59,8 @@ class PODConfig:
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典格式"""
         return {
+            "yunwu_api_key": self.api.yunwu_api_key,
+            "yunwu_api_base": self.api.yunwu_api_base,
             "openai_api_key": self.api.openai_api_key,
             "anthropic_api_key": self.api.anthropic_api_key,
             "printful_api_key": self.api.printful_api_key,
@@ -79,6 +86,8 @@ def load_config_from_env() -> PODConfig:
     
     return PODConfig(
         api=APIConfig(
+            yunwu_api_key=os.getenv("YUNWU_API_KEY"),
+            yunwu_api_base=os.getenv("YUNWU_API_BASE", "https://yunwu.ai/v1"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             printful_api_key=os.getenv("PRINTFUL_API_KEY"),
@@ -89,7 +98,7 @@ def load_config_from_env() -> PODConfig:
             max_retries=int(os.getenv("MAX_RETRIES", "3")),
             quality_threshold=float(os.getenv("QUALITY_THRESHOLD", "0.8")),
             human_review_required=os.getenv("HUMAN_REVIEW", "false").lower() == "true",
-            include_optimization=os.getenv("INCLUDE_OPTIMIZATION", "true").lower() == "true",
+            include_optimization=os.getenv("INCLUDE_OPTIMIZATION", "false").lower() == "true",
         ),
         database=DatabaseConfig(
             database_url=os.getenv("DATABASE_URL"),
@@ -108,12 +117,12 @@ def validate_config(config: PODConfig) -> tuple:
     warnings = []
     errors = []
     
-    # 检查必要的API密钥
-    if not config.api.openai_api_key:
-        warnings.append("OpenAI API key not set - design generation will use mock data")
+    # 检查必要的API密钥（优先检查yunwu，其次检查原始key）
+    if not config.api.yunwu_api_key and not config.api.openai_api_key:
+        warnings.append("Neither Yunwu nor OpenAI API key set - design generation will use mock data")
     
-    if not config.api.anthropic_api_key:
-        warnings.append("Anthropic API key not set - trend analysis will use mock data")
+    if not config.api.yunwu_api_key and not config.api.anthropic_api_key:
+        warnings.append("Neither Yunwu nor Anthropic API key set - trend analysis will use mock data")
     
     if not config.api.printful_api_key:
         warnings.append("Printful API key not set - mockup creation will use mock data")

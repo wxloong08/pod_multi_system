@@ -15,51 +15,55 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useWorkflows } from "@/hooks"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname()
+    // 获取最新活动用于显示市场信息
+    const { data } = useWorkflows({ limit: 1 })
+    const latestWorkflow = data?.workflows?.[0]
 
     const routes = [
         {
-            label: "Overview",
+            label: "总览",
             icon: LayoutDashboard,
             href: "/dashboard",
             color: "text-sky-500",
         },
         {
-            label: "New Campaign",
+            label: "新建活动",
             icon: PlusCircle,
             href: "/campaign/new",
             color: "text-violet-500",
         },
         {
-            label: "Designs",
+            label: "设计图库",
             icon: ImageIcon,
             href: "/designs",
             color: "text-pink-700",
         },
         {
-            label: "Products",
+            label: "产品管理",
             icon: Box,
             href: "/products",
             color: "text-orange-700",
         },
         {
-            label: "Listings",
+            label: "商品列表",
             icon: ShoppingBag,
             href: "/listings",
             color: "text-emerald-500",
         },
         {
-            label: "Agent Status",
+            label: "Agent 状态",
             icon: Activity,
             href: "/status",
             color: "text-green-700",
         },
         {
-            label: "Settings",
+            label: "系统设置",
             icon: Settings,
             href: "/settings",
         },
@@ -103,9 +107,13 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
                 <div className="px-3 py-2">
                     <div className="bg-muted/50 rounded-lg p-3">
-                        <p className="text-xs text-muted-foreground font-medium mb-2">Current Niche</p>
-                        <div className="text-sm font-semibold truncate">Cat Lovers</div>
-                        <div className="text-xs text-muted-foreground mt-1">Minimalist Style</div>
+                        <p className="text-xs text-muted-foreground font-medium mb-2">当前市场</p>
+                        <div className="text-sm font-semibold truncate">
+                            {latestWorkflow ? latestWorkflow.niche : "暂无活动"}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                            {latestWorkflow ? latestWorkflow.style : "请创建新活动"}
+                        </div>
                     </div>
                 </div>
             </div>

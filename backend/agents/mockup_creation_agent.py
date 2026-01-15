@@ -12,6 +12,7 @@ import uuid
 import asyncio
 from typing import Dict, Any, List
 from datetime import datetime
+from pathlib import Path
 
 from core.base_agent import ToolAgent, AgentError, with_retry
 from core.state import PODState, DesignData, ProductData
@@ -79,7 +80,16 @@ class MockupCreationAgent(ToolAgent):
     def _validate_preconditions(self, state: PODState):
         """验证前置条件"""
         designs = state.get("designs", [])
-        passed_designs = [d for d in designs if d.get("quality_score", 0) >= 0.8]
+        
+        # 过滤出已通过质量检查的设计（quality_score 不为 None 且 >= 0.8）
+        # 由于 operator.add 会导致重复，按 design_id 去重，只取最新的（有分数的版本）
+        design_dict = {}
+        for d in designs:
+            design_id = d.get("design_id")
+            if design_id and d.get("quality_score") is not None:
+                design_dict[design_id] = d
+        
+        passed_designs = [d for d in design_dict.values() if d.get("quality_score", 0) >= 0.8]
         
         if not passed_designs:
             raise AgentError(
@@ -96,10 +106,21 @@ class MockupCreationAgent(ToolAgent):
         输出：products
         """
         designs = state["designs"]
-        product_types = state.get("product_types", ["t-shirt", "mug"])
+        product_types = state.get("product_types", [])
         
-        # 筛选通过质量检查的设计
-        passed_designs = [d for d in designs if d.get("quality_score", 0) >= 0.8]
+        # 处理空的 product_types
+        if not product_types or product_types == "" or (isinstance(product_types, list) and len(product_types) == 0):
+            product_types = ["t-shirt"]  # 默认产品类型
+        
+        # 按 design_id 去重，只取有 quality_score 的版本（处理 operator.add 导致的重复）
+        design_dict = {}
+        for d in designs:
+            design_id = d.get("design_id")
+            if design_id and d.get("quality_score") is not None:
+                design_dict[design_id] = d
+        
+        # 筛选通过质量检查的设计（quality_score >= 0.8）
+        passed_designs = [d for d in design_dict.values() if d.get("quality_score", 0) >= 0.8]
         
         self.logger.info(
             f"Creating mockups for {len(passed_designs)} designs, "
@@ -156,11 +177,58 @@ class MockupCreationAgent(ToolAgent):
         image_url: str, 
         template: Dict
     ) -> str:
-        """调用Printful Mockup Generator API"""
-        if not self.api_key:
-            # Mock响应
-            return f"https://example.com/mockup_{uuid.uuid4().hex[:8]}.png"
+        """
+        调用Printful Mockup Generator API
+        如果没有 API Key，则使用本地 Pillow 生成 Mockup
+        """
+        # 优先使用 Printful API（生产环境）
+        if self.api_key:
+            try:
+                return await self._call_printful_api_internal(image_url, template)
+            except Exception as e:
+                self.logger.warning(f"Printful API failed, falling back to local: {e}")
         
+        # 后备：使用本地 Pillow 生成 Mockup
+        return await self._generate_local_mockup(image_url, template)
+    
+    async def _generate_local_mockup(self, image_url: str, template: Dict) -> str:
+        """使用 Pillow 本地生成 Mockup"""
+        try:
+            from utils.local_mockup import LocalMockupGenerator
+            
+            # 根据 template 确定产品类型
+            product_type = self._get_product_type_from_template(template)
+            
+            # 使用 /app/static/mockups 目录，这样可以通过 FastAPI 静态文件服务访问
+            generator = LocalMockupGenerator(output_dir="/app/static/mockups")
+            mockup_path = await generator.generate_mockup(
+                design_image_path=image_url,
+                product_type=product_type
+            )
+            
+            # 返回本地文件路径（可通过 API 访问）
+            # 在生产环境中应该上传到 CDN
+            return f"/static/mockups/{Path(mockup_path).name}"
+            
+        except Exception as e:
+            self.logger.error(f"Local mockup generation failed: {e}")
+            # 最终后备：返回占位 URL
+            return f"/static/placeholder_mockup_{template.get('id', 0)}.png"
+    
+    def _get_product_type_from_template(self, template: Dict) -> str:
+        """从模板配置获取产品类型"""
+        template_id = template.get("id")
+        for product_type, config in self.PRODUCT_TEMPLATES.items():
+            if config.get("id") == template_id:
+                return product_type
+        return "poster"  # 默认
+    
+    async def _call_printful_api_internal(
+        self, 
+        image_url: str, 
+        template: Dict
+    ) -> str:
+        """Printful API 内部调用（保留用于生产环境）"""
         try:
             # Printful Mockup Generator API调用
             payload = {
