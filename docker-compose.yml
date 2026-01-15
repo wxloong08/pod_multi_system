@@ -14,11 +14,8 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      # 覆盖 Langfuse Host 为 Docker 内部网络
+      # 覆盖 Langfuse Host 为 Docker 内部网络 (External Network)
       - LANGFUSE_HOST=http://langfuse:3000
-    depends_on:
-      langfuse:
-        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
