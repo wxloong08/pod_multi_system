@@ -22,7 +22,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy configuration files first (important for path alias resolution)
-COPY tsconfig.json next.config.mjs tailwind.config.ts postcss.config.mjs components.json ./
+COPY package.json tsconfig.json next.config.mjs tailwind.config.ts postcss.config.mjs components.json ./
 # Copy source files
 COPY src ./src
 COPY public ./public
