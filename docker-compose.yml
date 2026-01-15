@@ -43,20 +43,6 @@ services:
       - backend
 
   # ==================
-  # Nginx Reverse Proxy
-  # ==================
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    restart: always
-    depends_on:
-      - frontend
-      - backend
-
-  # ==================
   # Langfuse V2 - LLM Observability
   # ==================
   langfuse-db:
