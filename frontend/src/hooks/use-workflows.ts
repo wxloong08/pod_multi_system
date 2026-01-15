@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { workflowApi, type WorkflowCreateRequest } from '@/services/api';
-import { useWorkflowStore } from '@/store';
-import type { WorkflowState } from '@/types/schema';
+import { workflowApi, type WorkflowCreateRequest } from '../services/api';
+import { useWorkflowStore } from '../store';
+import type { WorkflowState } from '../types/schema';
 
 // Query keys
 export const workflowKeys = {

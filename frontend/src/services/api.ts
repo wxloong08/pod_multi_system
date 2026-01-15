@@ -3,7 +3,7 @@ import type {
     WorkflowState,
     Design,
     Listing,
-} from '@/types/schema';
+} from '../types/schema';
 
 // API base URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';

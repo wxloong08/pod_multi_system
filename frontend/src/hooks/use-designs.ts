@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { designApi } from '@/services/api';
+import { designApi } from '../services/api';
 
 // Query keys
 export const designKeys = {

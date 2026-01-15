@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { healthApi } from '@/services/api';
+import { healthApi } from '../services/api';
 
 export function useHealth() {
     return useQuery({

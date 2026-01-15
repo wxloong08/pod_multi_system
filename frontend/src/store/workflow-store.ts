@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { WorkflowState } from '@/types/schema';
+import type { WorkflowState } from '../types/schema';
 
 interface WorkflowStoreState {
     // Current workflow being viewed/edited

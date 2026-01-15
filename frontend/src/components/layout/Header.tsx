@@ -2,13 +2,13 @@
 
 import { Menu } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "../ui/button"
 import {
     Sheet,
     SheetContent,
     SheetTrigger
-} from "@/components/ui/sheet"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "../ui/sheet"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,8 +16,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Sidebar } from "@/components/layout/Sidebar"
+} from "../ui/dropdown-menu"
+import { Sidebar } from "./Sidebar"
 
 export function Header() {
     return (

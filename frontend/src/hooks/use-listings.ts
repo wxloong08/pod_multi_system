@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { listingApi } from '@/services/api';
+import { listingApi } from '../services/api';
 
 // Query keys
 export const listingKeys = {
