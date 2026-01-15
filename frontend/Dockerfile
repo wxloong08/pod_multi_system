@@ -21,11 +21,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy configuration files first (important for path alias resolution)
-COPY package.json tsconfig.json next.config.mjs tailwind.config.ts postcss.config.mjs components.json ./
-# Copy source files
-COPY src ./src
-COPY public ./public
+# Copy all source files (see .dockerignore for exclusions)
+COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
