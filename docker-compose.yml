@@ -28,6 +28,35 @@ services:
       start_period: 10s
 
   # ==================
+  # Frontend (Next.js)
+  # ==================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://pod.travelmind.cloud
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - backend
+
+  # ==================
+  # Nginx Reverse Proxy
+  # ==================
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+    depends_on:
+      - frontend
+      - backend
+
+  # ==================
   # Langfuse V2 - LLM Observability
   # ==================
   langfuse-db:
